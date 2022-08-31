@@ -27,8 +27,8 @@ fn check_create_custom_event(){
 		println!("Check custom struct {}",Utc::now().timestamp_nanos());
 		for i in 0..25{
 			let st = format!("ABC: {}",i);
-			//assert_ok!(EventStorageModule::create_custom_event(Origin::signed(1),st));
-			println!("ABC {}",i);
+			assert_ok!(EventStorageModule::create_custom_event(Origin::signed(1),st));
+			//println!("ABC {}",i);
 		}
 		assert_ok!(EventStorageModule::remove_historical_events(Origin::signed(1)));
 		//assert_eq!(TemplateModule::check_custom_struct(Origin::signed(1)),42);
