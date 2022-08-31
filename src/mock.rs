@@ -1,5 +1,5 @@
 use crate as pallet_event_storage;
-use frame_support::traits::{ConstU16, ConstU64};
+use frame_support::traits::{ConstU16, ConstU64,OnFinalize,OnInitialize,OffchainWorker};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
@@ -17,8 +17,8 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system,
-		EventStorageModule: pallet_event_storage,
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		EventStorageModule: pallet_event_storage::{Pallet, Call, Storage, Event<T>},
 	}
 );
 

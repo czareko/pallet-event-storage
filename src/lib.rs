@@ -5,6 +5,16 @@
 /// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
 
+#[cfg_attr(not(feature = "std"), no_std)]
+
+use frame_system::{
+	self as system,
+	offchain::{
+		AppCrypto, CreateSignedTransaction, SendSignedTransaction, SendUnsignedTransaction,
+		SignedPayload, Signer, SigningTypes, SubmitTransaction,
+	},
+};
+
 #[cfg(test)]
 mod mock;
 
@@ -17,8 +27,10 @@ mod benchmarking;
 #[frame_support::pallet]
 pub mod pallet {
 	use chrono::{Duration, Utc};
+	use frame_support::log;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+	use crate::system;
 
 	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo)]
 	#[scale_info(skip_type_params(T))]
@@ -33,12 +45,28 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 
-	}
+		fn on_finalize(n: T::BlockNumber) {
+			println!("On Finalize Event ----------");
 
+		}
+
+		/// Offchain Worker entry point.
+		///
+		/// Note that it's not guaranteed for offchain workers to run on EVERY block, there might
+		/// be cases where some blocks are skipped, or for some the worker runs twice (re-orgs),
+		/// so the code should be able to handle that.
+		fn offchain_worker(block_number: T::BlockNumber) {
+			log::info!("Hello World from offchain workers!");
+			let parent_hash = <system::Pallet<T>>::block_hash(block_number - 1u32.into());
+			let res = Self::remove_history();
+			println!("Current block: {:?} (parent hash: {:?})", block_number, parent_hash);
+			log::debug!("Current block: {:?} (parent hash: {:?})", block_number, parent_hash);
+
+		}
+	}
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -87,43 +115,6 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
-		/// An example dispatchable that takes a singles value as a parameter, writes the value to
-		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
-			// Check that the extrinsic was signed and get the signer.
-			// This function will return an error if the extrinsic is not signed.
-			// https://docs.substrate.io/main-docs/build/origins/
-			let who = ensure_signed(origin)?;
-
-			// Update storage.
-			<Something<T>>::put(something);
-
-			// Emit an event.
-			Self::deposit_event(Event::SomethingStored(something, who));
-			// Return a successful DispatchResultWithPostInfo
-			Ok(())
-		}
-
-		/// An example dispatchable that may throw a custom error.
-		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
-		pub fn cause_error(origin: OriginFor<T>) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-
-			// Read a value from storage.
-			match <Something<T>>::get() {
-				// Return an error if the value has not been set.
-				None => return Err(Error::<T>::NoneValue.into()),
-				Some(old) => {
-					// Increment the value read from storage; will error in the event of overflow.
-					let new = old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
-					// Update the value in storage with the incremented result.
-					<Something<T>>::put(new);
-					Ok(())
-				},
-			}
-		}
-
 		#[pallet::weight(1000 + T::DbWeight::get().writes(1))]
 		pub fn create_custom_event(origin: OriginFor<T>,message: String) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -166,8 +157,57 @@ pub mod pallet {
 				removed_elems+=1;
 			}
 
+			//Self::storage_size();
 			Self::deposit_event(Event::HistoricalEventsRemoved(removed_elems,who.clone()));
 			Ok(())
+		}
+
+		#[pallet::weight(1000)]
+		pub fn check_public(origin: OriginFor<T>)->DispatchResult{
+			println!("Check_Public IN");
+			Ok(())
+		}
+	}
+	impl<T: Config> Pallet<T> {
+
+		fn storage_size()->Option<i32>{
+			let events = <CustomEvents<T>>::iter_keys();
+			let ev_size = events.count() as i32;
+			if ev_size == 0 {
+				None
+			}
+			else{
+				println!("Storage size: {}",ev_size);
+				Some(ev_size)
+			}
+		}
+
+		fn remove_history()->Option<i32>{
+			println!("PRV:");
+			let mut to_remove =vec![];
+			let mut removed_elems=0;
+
+			/*
+			If the storage will be altered during the iteration we can have undefined results
+			To limit this problem, we split this process into two parts.
+			*/
+			let keys = <CustomEvents<T>>::iter_keys();
+			for key in keys{
+				let tnow = (Utc::now()-Duration::seconds(1)).timestamp_nanos();
+				if key<tnow {
+					to_remove.push(key);
+				}
+				else{
+					println!("Else");
+				}
+			}
+			println!("To remove: {}",to_remove.len());
+			for key in to_remove{
+				println!("Removing: {}",key);
+				<CustomEvents<T>>::remove(key);
+				removed_elems+=1;
+			}
+			Some(removed_elems)
 		}
 	}
 }
