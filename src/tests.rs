@@ -35,7 +35,7 @@ fn should_create_custom_event(){
 		assert_eq!(EventStorageModule::get_storage_size(),Some(0));
 		//given
 		for i in 0..25{
-			let st = format!("ABC: {}",i);
+			let st = format!("ABC: {}",i).as_bytes().to_vec();
 			assert_ok!(EventStorageModule::create_custom_event(Origin::signed(1),st));
 		}
 		//then
@@ -89,11 +89,11 @@ fn should_remove_old_events(){
 }
 
 
-fn generate_random_content()->String{
+fn generate_random_content()->Vec<u8>{
 	let mut rng = rand::thread_rng();
 	//println!("Integer: {}", rng.gen_range(0..10000));
 	//let content = "Content ".to_string();
-	format!("Content {}",rng.gen_range(0..10000))
+	format!("Content {}",rng.gen_range(0..10000)).as_bytes().to_vec()
 }
 
 //Helper fake block generating function
