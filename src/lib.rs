@@ -25,7 +25,7 @@ pub mod pallet {
 	#[scale_info(skip_type_params(T))]
 	pub struct CustomEvent<T: Config> {
 		//pub time_stamp: i64,
-		pub content: String,
+		pub content: Vec<u8>,
 		pub reporter: <T as frame_system::Config>::AccountId,
 	}
 
@@ -84,9 +84,8 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 
 		#[pallet::weight(1000 + T::DbWeight::get().writes(1))]
-		pub fn create_custom_event(origin: OriginFor<T>,message: String) -> DispatchResult {
+		pub fn create_custom_event(origin: OriginFor<T>,content_value: Vec<u8>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			let content_value = message;
 			let tstamp = Utc::now().timestamp_nanos();
 			let custom_event = CustomEvent { /*time_stamp: tstamp, */content: content_value.clone(), reporter: who.clone()};
 
