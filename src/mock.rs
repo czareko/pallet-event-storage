@@ -1,4 +1,5 @@
 use crate as pallet_event_storage;
+use frame_support::parameter_types;
 use frame_support::traits::{ConstU16, ConstU64};
 use frame_system as system;
 use sp_core::H256;
@@ -17,10 +18,15 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system,
-		EventStorageModule: pallet_event_storage,
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		EventStorageModule: pallet_event_storage::{Pallet, Call, Storage, Event<T>},
 	}
 );
+
+
+parameter_types! {
+	pub const HistorySize: i64 = 10; // Here we set up a short history size (in seconds)
+}
 
 impl system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
@@ -51,6 +57,7 @@ impl system::Config for Test {
 
 impl pallet_event_storage::Config for Test {
 	type Event = Event;
+	type HistorySize = HistorySize;
 }
 
 // Build genesis storage according to the mock runtime.
