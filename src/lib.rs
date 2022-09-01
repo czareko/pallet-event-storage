@@ -57,6 +57,9 @@ pub mod pallet {
 		//History size expressed in hours
 		#[pallet::constant]
 		type HistorySize: Get<i64>;
+
+		#[pallet::constant]
+		type AuthorizedAccountId: Get<<Self as frame_system::Config>::AccountId>;
 	}
 
 	#[pallet::storage]
@@ -78,6 +81,7 @@ pub mod pallet {
 	pub enum Error<T> {
 		StorageStatusException,
 		EventNotFound,
+		UnauthorizedCaller,
 	}
 
 	#[pallet::call]
@@ -86,6 +90,7 @@ pub mod pallet {
 		#[pallet::weight(1000 + T::DbWeight::get().writes(1))]
 		pub fn create_custom_event(origin: OriginFor<T>,content_value: Vec<u8>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+			ensure!(who == T::AuthorizedAccountId::get(), Error::<T>::UnauthorizedCaller);
 			let tstamp = Utc::now().timestamp_nanos();
 			let custom_event = CustomEvent { /*time_stamp: tstamp, */content: content_value.clone(), reporter: who.clone()};
 

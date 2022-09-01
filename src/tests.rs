@@ -1,5 +1,5 @@
-use crate::mock::*;
-use frame_support::{assert_ok};
+use crate::{mock::*, Error};
+use frame_support::{assert_noop, assert_ok};
 use frame_support::storage::KeyPrefixIterator;
 use frame_support::traits::{OffchainWorker};
 use rand::Rng;
@@ -87,8 +87,18 @@ fn should_remove_old_events(){
 
 	});
 }
+#[test]
+fn should_thow_error_for_unauthorized_users(){
+	new_test_ext().execute_with(|| {
+		//given
+		let account_id: u64 = 2;
+		//then
+		assert_noop!(EventStorageModule::create_custom_event(Origin::signed(account_id),generate_random_content()), Error::<Test>::UnauthorizedCaller);
+	});
 
+}
 
+//Helper for generating random content to our custom events
 fn generate_random_content()->Vec<u8>{
 	let mut rng = rand::thread_rng();
 	//println!("Integer: {}", rng.gen_range(0..10000));
