@@ -2,6 +2,8 @@ use crate::mock::*;
 use frame_support::{assert_ok};
 use frame_support::storage::KeyPrefixIterator;
 use frame_support::traits::{OffchainWorker};
+use rand::Rng;
+use std::{thread, time::Duration};
 
 /*
 #[test]
@@ -21,8 +23,11 @@ fn correct_error_for_none_value() {
 		assert_noop!(EventStorageModule::cause_error(Origin::signed(1)), Error::<Test>::NoneValue);
 	});
 }
-*/
 
+*/
+/***
+Storage tests
+*/
 #[test]
 fn should_create_custom_event(){
 	new_test_ext().execute_with(|| {
@@ -38,12 +43,11 @@ fn should_create_custom_event(){
 		run_to_next_block();
 	});
 }
-
 #[test]
 fn should_find_items_by_key(){
 	new_test_ext().execute_with(|| {
 		//given
-		let test_content = "random string".to_string();
+		let test_content = generate_random_content();
 		assert_ok!(EventStorageModule::create_custom_event(Origin::signed(1),test_content.clone()));
 		let mut keys: KeyPrefixIterator<i64> = EventStorageModule::get_custom_event_keys().unwrap();
 		//then
@@ -57,6 +61,41 @@ fn should_find_items_by_key(){
 		}
 	});
 }
+/***
+Automated history removal
+*/
+#[test]
+fn should_remove_old_events(){
+	new_test_ext().execute_with(|| {
+
+		//when
+		for _i in 0..25 {
+			assert_ok!(EventStorageModule::create_custom_event(Origin::signed(1),generate_random_content()));
+		}
+		//given
+		// 25 events in my storage
+		let keys: KeyPrefixIterator<i64> = EventStorageModule::get_custom_event_keys().unwrap();
+		assert_eq!(keys.count(),25);
+
+		//time from pallet mock configuration
+		thread::sleep(Duration::from_secs(HistorySize::get().try_into().unwrap()));
+		//then
+		//all events should be removed after the next blog finalization
+		run_to_next_block();
+		let keys: KeyPrefixIterator<i64> = EventStorageModule::get_custom_event_keys().unwrap();
+		assert_eq!(keys.count(),0);
+
+	});
+}
+
+
+fn generate_random_content()->String{
+	let mut rng = rand::thread_rng();
+	//println!("Integer: {}", rng.gen_range(0..10000));
+	//let content = "Content ".to_string();
+	format!("Content {}",rng.gen_range(0..10000))
+}
+
 //Helper fake block generating function
 fn run_to_next_block() {
 	System::set_block_number(System::block_number() + 1);

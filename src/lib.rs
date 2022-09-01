@@ -53,6 +53,10 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		//History size expressed in hours
+		#[pallet::constant]
+		type HistorySize: Get<i64>;
 	}
 
 	#[pallet::storage]
@@ -95,7 +99,6 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 
 		fn remove_history()->Option<i32>{
-			println!("PRV:");
 			let mut to_remove =vec![];
 			let mut removed_elems=0;
 
@@ -105,7 +108,7 @@ pub mod pallet {
 			*/
 			let keys = <CustomEvents<T>>::iter_keys();
 			for key in keys{
-				let tnow = (Utc::now()-Duration::seconds(1)).timestamp_nanos();
+				let tnow = (Utc::now()-Duration::seconds(T::HistorySize::get())).timestamp_nanos();
 				if key<tnow {
 					to_remove.push(key);
 				}
@@ -113,9 +116,7 @@ pub mod pallet {
 				// 	println!("Else");
 				// }
 			}
-			println!("To remove: {}",to_remove.len());
 			for key in to_remove{
-				println!("Removing: {}",key);
 				<CustomEvents<T>>::remove(key);
 				removed_elems+=1;
 			}
