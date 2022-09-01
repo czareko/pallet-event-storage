@@ -116,9 +116,6 @@ pub mod pallet {
 				if key<tnow {
 					to_remove.push(key);
 				}
-				// else{
-				// 	println!("Else");
-				// }
 			}
 			for key in to_remove{
 				<CustomEvents<T>>::remove(key);

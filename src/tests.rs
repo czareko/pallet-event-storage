@@ -101,8 +101,6 @@ fn should_thow_error_for_unauthorized_users(){
 //Helper for generating random content to our custom events
 fn generate_random_content()->Vec<u8>{
 	let mut rng = rand::thread_rng();
-	//println!("Integer: {}", rng.gen_range(0..10000));
-	//let content = "Content ".to_string();
 	format!("Content {}",rng.gen_range(0..10000)).as_bytes().to_vec()
 }
 
