@@ -11,6 +11,8 @@ use sp_runtime::{
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
+pub(crate) type AccountId = u64;
+
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
 	pub enum Test where
@@ -25,7 +27,8 @@ frame_support::construct_runtime!(
 
 
 parameter_types! {
-	pub const HistorySize: i64 = 10; // Here we set up a short history size (in seconds)
+	pub const HistorySize: i64 = 2; // Here we set up a short history size (in seconds)
+	pub const AuthorizedAccountId: AccountId = 1;//Very basic idea for caller identity limitation
 }
 
 impl system::Config for Test {
@@ -39,7 +42,7 @@ impl system::Config for Test {
 	type BlockNumber = u64;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = u64;
+	type AccountId = AccountId;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
 	type Event = Event;
@@ -58,6 +61,7 @@ impl system::Config for Test {
 impl pallet_event_storage::Config for Test {
 	type Event = Event;
 	type HistorySize = HistorySize;
+	type AuthorizedAccountId = AuthorizedAccountId;
 }
 
 // Build genesis storage according to the mock runtime.
