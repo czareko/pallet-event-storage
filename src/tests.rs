@@ -5,26 +5,6 @@ use frame_support::traits::{OffchainWorker};
 use rand::Rng;
 use std::{thread, time::Duration};
 
-/*
-#[test]
-fn it_works_for_default_value() {
-	new_test_ext().execute_with(|| {
-		// Dispatch a signed extrinsic.
-		assert_ok!(EventStorageModule::do_something(Origin::signed(1), 42));
-		// Read pallet storage and assert an expected result.
-		assert_eq!(EventStorageModule::something(), Some(42));
-	});
-}
-
-#[test]
-fn correct_error_for_none_value() {
-	new_test_ext().execute_with(|| {
-		// Ensure the expected error is thrown when no value is present.
-		assert_noop!(EventStorageModule::cause_error(Origin::signed(1)), Error::<Test>::NoneValue);
-	});
-}
-
-*/
 /***
 Storage tests
 */
@@ -43,6 +23,9 @@ fn should_create_custom_event(){
 		run_to_next_block();
 	});
 }
+/***
+Tests item search, it's not exposed outside but very useful to be sure if we know what we want to delete and what we saved before.
+*/
 #[test]
 fn should_find_items_by_key(){
 	new_test_ext().execute_with(|| {

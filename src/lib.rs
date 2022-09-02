@@ -1,8 +1,4 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-
-/// Edit this file to define custom logic or remove it if it is not needed.
-/// Learn more about FRAME and the core library of Substrate FRAME pallets:
-/// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
 
 #[cfg(test)]
@@ -24,9 +20,10 @@ pub mod pallet {
 	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo)]
 	#[scale_info(skip_type_params(T))]
 	pub struct CustomEvent<T: Config> {
-		//pub time_stamp: i64,
+		// This is a very tech example, to make it more useful from business perspective this should be the first place to expand.
+		//pub time_stamp: i64, <<--- we have this as a key, but probably for more complex business operation we can need this inside as well.
 		pub content: Vec<u8>,
-		pub reporter: <T as frame_system::Config>::AccountId,
+		pub reporter: <T as frame_system::Config>::AccountId, //we limited access to our method so we could remove this from here as well.
 	}
 
 	#[pallet::pallet]
@@ -58,25 +55,24 @@ pub mod pallet {
 		#[pallet::constant]
 		type HistorySize: Get<i64>;
 
+		//Account authorized to execute public pallet method
 		#[pallet::constant]
 		type AuthorizedAccountId: Get<<Self as frame_system::Config>::AccountId>;
 	}
 
+	//i64 is expensive as a key, we should think about something smaller
 	#[pallet::storage]
 	#[pallet::getter(fn custom_events)]
 	pub(super) type CustomEvents<T: Config> = StorageMap<_, Twox64Concat, i64, CustomEvent<T>,OptionQuery>;
 
-	// Pallets use events to inform users when important changes are made.
-	// https://docs.substrate.io/main-docs/build/events-errors/
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		SomethingStored(u32, T::AccountId),
-		EventStored(i64,T::AccountId),
+		EventStored(i64,T::AccountId), //It will be always the same account. Maybe we don't need it here?
 		HistoricalEventsRemoved(i32,T::BlockNumber),
 	}
 
-	// Errors inform users that something went wrong.
+	// Should be expanded with more detailed behaviours tracking.
 	#[pallet::error]
 	pub enum Error<T> {
 		StorageStatusException,
@@ -91,17 +87,18 @@ pub mod pallet {
 		pub fn create_custom_event(origin: OriginFor<T>,content_value: Vec<u8>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(who == T::AuthorizedAccountId::get(), Error::<T>::UnauthorizedCaller);
-			let tstamp = Utc::now().timestamp_nanos();
+			let time_stamp = Utc::now().timestamp_nanos();
 			let custom_event = CustomEvent { /*time_stamp: tstamp, */content: content_value.clone(), reporter: who.clone()};
 
-			<CustomEvents<T>>::insert(tstamp,custom_event);
+			<CustomEvents<T>>::insert(time_stamp,custom_event);
 
-			Self::deposit_event(Event::EventStored(tstamp,who.clone()));
+			Self::deposit_event(Event::EventStored(time_stamp,who.clone()));
 			Ok(())
 		}
 	}
 	impl<T: Config> Pallet<T> {
 
+		//We don't want to expose this method outside
 		fn remove_history()->Option<i32>{
 			let mut to_remove =vec![];
 			let mut removed_elems=0;
@@ -125,7 +122,6 @@ pub mod pallet {
 		}
 
 		//Methods for test storage behaviors
-
 		pub fn get_storage_size()->Option<i32>{
 			let events = <CustomEvents<T>>::iter_keys();
 			let ev_size = events.count() as i32;
