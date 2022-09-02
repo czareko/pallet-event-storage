@@ -6,6 +6,8 @@ The idea is to store custom events in our pallet, access to this functionality s
 
 This example is a tech representation of the idea because we didn’t focus on how to use these events. The first step to change it would be to redesign the CustomEvent struct
 
+https://github.com/czareko/pallet-event-storage/blob/d83af4945d7516a3c20c943d6cca8e0ca680ec83/src/lib.rs#L20-L27
+
 ### Parametrization
 
 |Parameter| Description                    |
@@ -13,10 +15,14 @@ This example is a tech representation of the idea because we didn’t focus on h
 |HistorySize: i64| History size defined in seconds|
 |AuthorizedAccountId: AccountId| Basic account id privilaged to create custome events |
 
+Here we have a sample from [mock.rs](https://github.com/czareko/pallet-event-storage/blob/feat/documentation/src/mock.rs)
+
+https://github.com/czareko/pallet-event-storage/blob/d83af4945d7516a3c20c943d6cca8e0ca680ec83/src/mock.rs#L29-L32
+
 
 ### How to test it?
 
-The best description for the whole functionalities we will find in tests.rs
+The best description for the whole functionalities we will find in [tests.rs](https://github.com/czareko/pallet-event-storage/blob/feat/documentation/src/tests.rs)
 
 ``
 cargo test
