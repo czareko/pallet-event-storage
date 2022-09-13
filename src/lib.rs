@@ -28,7 +28,6 @@ pub mod pallet {
 
 	#[pallet::pallet]
 	#[pallet::without_storage_info]
-	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(PhantomData<T>);
 
 	#[pallet::hooks]
@@ -62,8 +61,8 @@ pub mod pallet {
 
 	//i64 is expensive as a key, we should think about something smaller
 	#[pallet::storage]
-	#[pallet::getter(fn custom_events)]
-	pub(super) type CustomEvents<T: Config> = StorageMap<_, Twox64Concat, i64, CustomEvent<T>,OptionQuery>;
+	#[pallet::getter(fn get_custom_event)]
+	pub(super) type CustomEvents<T: Config> = StorageMap<_,Twox64Concat, i64, CustomEvent<T>,OptionQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -130,10 +129,6 @@ pub mod pallet {
 
 		pub fn get_custom_event_keys()->Option<KeyPrefixIterator<i64>>{
 			Some(<CustomEvents<T>>::iter_keys())
-		}
-		pub fn get_custom_event(key: i64)->Option<CustomEvent<T>>{
-			let ans = <CustomEvents<T>>::get(key);
-			Some(ans.unwrap())
 		}
 	}
 }
